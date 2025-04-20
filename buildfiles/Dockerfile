@@ -1,4 +1,3 @@
-# Docker + uv integration: https://docs.astral.sh/uv/guides/integration/docker/
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
