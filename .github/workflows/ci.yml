@@ -43,7 +43,7 @@ jobs:
           context: .
           file: ./buildfiles/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository.lower }}:latest
+          tags: ghcr.io/${{ github.repository }}:latest
 
       - name: Build Python Package
         run: uv build
