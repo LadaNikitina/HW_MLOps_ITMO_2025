@@ -1,7 +1,6 @@
-import torch
 import numpy as np
+import torch
 from tqdm import tqdm
-from transformers import AutoTokenizer, BertConfig, AutoModel
 
 if torch.backends.mps.is_available():
     device = torch.device("mps")
@@ -9,6 +8,7 @@ elif torch.cuda.is_available():
     device = torch.device("cuda")
 else:
     device = torch.device("cpu")
+
 
 def get_dnabert2_embeddings(dataloader, tokenizer, model, pooling="mean"):
     embeddings = []
@@ -19,11 +19,7 @@ def get_dnabert2_embeddings(dataloader, tokenizer, model, pooling="mean"):
         sequences, lbls = batch
 
         tokens = tokenizer(
-            list(sequences),
-            padding=True,
-            truncation=True,
-            max_length=512,
-            return_tensors="pt"
+            list(sequences), padding=True, truncation=True, max_length=512, return_tensors="pt"
         ).to(device)
 
         with torch.no_grad():

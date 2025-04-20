@@ -1,14 +1,15 @@
-import os
-import torch
+from transformers import AutoModel, AutoTokenizer, BertConfig
 
 from .dataset import load_nucleotide_transformer
 from .embeddings import get_dnabert2_embeddings
-from .model import train_classifier, evaluate_model
-from transformers import AutoTokenizer, BertConfig, AutoModel
+from .model import evaluate_model, train_classifier
+
 
 def classify_with_dnabert(dataset_name, metric, embedding_fn=get_dnabert2_embeddings):
     batch_size = 128
-    train_loader, valid_loader, test_loader = load_nucleotide_transformer(batch_size, valid_split=0.1, dataset_name=dataset_name)
+    train_loader, valid_loader, test_loader = load_nucleotide_transformer(
+        batch_size, valid_split=0.1, dataset_name=dataset_name
+    )
 
     model_name = "zhihan1996/DNABERT-2-117M"
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
@@ -22,6 +23,6 @@ def classify_with_dnabert(dataset_name, metric, embedding_fn=get_dnabert2_embedd
 
     clf = train_classifier(X_train, y_train, X_valid, y_valid, metric)
     metric_value = evaluate_model(clf, X_test, y_test, metric)
-    
+
     print(f"{metric}: {metric_value:.4f}")
     return metric_value
