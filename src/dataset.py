@@ -28,6 +28,7 @@ def load_nucleotide_transformer(
         dataset_name,
         split="train",
         streaming=False,
+        trust_remote_code=True,
     )
 
     test_dataset = load_dataset(
@@ -35,6 +36,7 @@ def load_nucleotide_transformer(
         dataset_name,
         split="test",
         streaming=False,
+        trust_remote_code=True,
     )
 
     train_sequences = train_dataset["sequence"]

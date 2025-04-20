@@ -1,20 +1,20 @@
-from transformers import AutoModel, AutoTokenizer, BertConfig
+from transformers import AutoModelForMaskedLM, AutoTokenizer
 
 from .dataset import load_nucleotide_transformer
-from .embeddings import get_dnabert2_embeddings
+from .embeddings import get_nt_embeddings
 from .model import evaluate_model, train_classifier
 
 
-def classify_with_dnabert(dataset_name, metric, embedding_fn=get_dnabert2_embeddings):
+def classify_with_dnabert(dataset_name, metric, embedding_fn=get_nt_embeddings):
     batch_size = 128
     train_loader, valid_loader, test_loader = load_nucleotide_transformer(
         batch_size, valid_split=0.1, dataset_name=dataset_name
     )
 
-    model_name = "zhihan1996/DNABERT-2-117M"
+    model_name = "InstaDeepAI/nucleotide-transformer-v2-50m-multi-species"
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    config = BertConfig.from_pretrained(model_name)
-    model = AutoModel.from_pretrained(model_name, config=config, trust_remote_code=True)
+    model = AutoModelForMaskedLM.from_pretrained(model_name, trust_remote_code=True)
+
     model.eval()
 
     X_train, y_train = embedding_fn(train_loader, tokenizer, model)

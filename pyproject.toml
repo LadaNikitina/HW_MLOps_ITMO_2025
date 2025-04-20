@@ -17,17 +17,17 @@ dependencies = [
 
 [tool.ruff]
 line-length = 100
-select = ["E", "F", "I"]  # E, F — pycodestyle/flake8, I — isort
-ignore = ["E501"]         # например, не ругаться на длину строк
+select = ["E", "F", "I"]
+ignore = ["E501"] 
 
 [tool.isort]
-profile = "black"         # просто хороший порядок импортов, но без самого black
+profile = "black"  
 line_length = 100
 multi_line_output = 3
 include_trailing_comma = true
 
 [tool.ruff.lint]
-fixable = ["ALL"]         # ruff может автоматически фиксить всё, что возможно
+fixable = ["ALL"] 
 
 [project.optional-dependencies]
 dev = ["ruff", "isort"]

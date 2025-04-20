@@ -3,6 +3,7 @@ import os
 from src.train import classify_with_dnabert
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["USE_TRITON"] = "0"
 
 
 def main():
