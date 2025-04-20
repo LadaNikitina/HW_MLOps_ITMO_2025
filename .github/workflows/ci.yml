@@ -37,13 +37,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: set lower case owner name
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >>${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
+
       - name: Push Docker to GitHub Container Registry
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./buildfiles/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: ghcr.io/${{ env.OWNER_LC }}/${{ github.event.repository.name }}:latest
 
       - name: Build Python Package
         run: uv build
