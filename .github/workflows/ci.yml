@@ -71,6 +71,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./buildfiles/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ghcr.io/${{ env.OWNER_LC }}/${{ github.event.repository.name }}:${{ github.sha }}
