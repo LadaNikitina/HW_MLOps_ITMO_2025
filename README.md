@@ -43,8 +43,8 @@ dvc pull   # скачать данные из облака
 ## При клонировании проекта
 
 ```bash
-git clone <repo>
-cd <repo>
+git clone git@github.com:LadaNikitina/hw_mlops_itmo_2025.git
+cd hw_mlops_itmo_2025
 uv pip install .
 dvc pull
 ```
