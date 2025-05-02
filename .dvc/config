@@ -1,4 +1,7 @@
 [core]
-    remote = gdrive
+    remote = yandex
 ['remote "gdrive"']
     url = gdrive://1yvcFKX8tqFfGHUXq_v5_qj7_firz3i1e
+['remote "yandex"']
+    url = s3://mlops-bucket-2025/dvc-store
+    endpointurl = https://storage.yandexcloud.net
