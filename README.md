@@ -26,10 +26,11 @@ git add data/something.csv.dvc .gitignore
 git commit -m "add some data"
 ```
 
-##  Настройка удалённого хранилища (Google Drive)
+##  Настройка удалённого хранилища S3
 
 ```bash
-dvc remote add -d gdrive gdrive://<folder-id>
+dvc remote add -d -f yandex s3://mlops-bucket-2025/dvc-store
+dvc remote modify yandex endpointurl https://storage.yandexcloud.net 
 git commit .dvc/config -m "setup remote"
 ```
 
