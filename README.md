@@ -24,6 +24,7 @@ git commit -m "init DVC"
 dvc add data/something.csv
 git add data/something.csv.dvc .gitignore
 git commit -m "add some data"
+dvc push
 ```
 
 ##  Настройка удалённого хранилища S3
