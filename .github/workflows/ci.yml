@@ -55,7 +55,9 @@ jobs:
           python-version-file: "pyproject.toml"
 
       - name: Install build dependencies
-        run: uv pip install uv-dynamic-versioning hatchling
+        run: |
+          uv sync --dev
+          uv pip install uv-dynamic-versioning hatchling
 
       - name: Build package
         run: uv build
