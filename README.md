@@ -19,7 +19,8 @@
 4. Написан юпитер ноутбук для обучения моделей с использованием данных из папки `data/embeddings`. Было обучено 3 модели - `catboost.CatBoostClassifier`, `xgboost.XGBClassifier`, `lightgbm.LGBMClassifier`. Обученные модели были сохранены в папку `models` и добавлены в DVC [коммитом](https://github.com/LadaNikitina/hw_mlops_itmo_2025/pull/6/commits/0422600b0fcd699b6ac70f17f3cdeb6bc4a5370a)
 5. Написан юпитер ноутбук для сравнения моделей на тестовых выборках. Результаты сравнения представлены в отчете ниже
 
-### Отчет по результатам 
+## Отчет по результатам 
+
 | Dataset          | XGBoost | CatBoost | LightGBM |
 |------------------|---------|----------|----------|
 | enhancers        | 0.4721  | 0.4758   | 0.4638   |
