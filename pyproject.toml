@@ -1,6 +1,6 @@
 [project]
 name = "hw-mlops-itmo-2025"
-dynamic = ["version"]
+version = "0.1.1"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,26 +13,8 @@ dependencies = [
     "torch>=2.6.0",
     "torchvision>=0.21.0",
     "transformers>=4.51.3",
-    "dvc[s3]>=3.50.0",
-    "ipykernel>=6.29.5",
-    "xgboost>=3.0.0",
-    "lightgbm>=4.6.0",
+    "dvc[s3]>=3.50.0"
 ]
-
-[build-system]
-requires = ["hatchling", "uv-dynamic-versioning"]
-build-backend = "hatchling.build"
-
-[tool.hatch.version]
-source = "uv-dynamic-versioning"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src"]
-
-[tool.uv-dynamic-versioning]
-vcs = "git"
-style = "pep440"
-bump = true
 
 [tool.ruff]
 line-length = 100
