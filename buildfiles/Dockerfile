@@ -16,6 +16,7 @@ RUN mkdir -p $UV_CACHE_DIR
 ADD . /app
 WORKDIR /app
 
-RUN uv sync --frozen && rm -rf $UV_CACHE_DIR
+RUN uv sync --frozen \
+ && rm -rf $UV_CACHE_DIR /root/.cache/uv /root/.cache/pip
 
 CMD ["uv", "run", "python", "main.py"]
