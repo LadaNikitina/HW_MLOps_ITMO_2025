@@ -1,0 +1,29 @@
+stages:
+  process:
+    cmd: python src/process.py
+    deps:
+      - src/process.py
+      - data/embeddings
+    outs:
+      - data/processed_embeddings
+
+  train:
+    cmd: python src/train.py
+    deps:
+      - src/train.py
+      - data/processed
+    outs:
+      - models
+
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+      - src/evaluate.py
+      - data/processed
+      - models
+    metrics:
+      - metrics/enhancers.json
+      - metrics/promoter_all.json
+      - metrics/splice_sites_all.json
+      - metrics/H3K9me3.json
+      - metrics/H4K20me1.json
