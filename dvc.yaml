@@ -11,7 +11,7 @@ stages:
     cmd: python src/train.py
     deps:
       - src/train.py
-      - data/processed
+      - data/processed_embeddings
     outs:
       - models
 
@@ -19,7 +19,7 @@ stages:
     cmd: python src/evaluate.py
     deps:
       - src/evaluate.py
-      - data/processed
+      - data/processed_embeddings
       - models
     metrics:
       - metrics/enhancers.json

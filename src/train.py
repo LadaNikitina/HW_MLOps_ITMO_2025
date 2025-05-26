@@ -24,7 +24,7 @@ def create_classifier():
         learning_rate=0.02,
         depth=4,
         verbose=50,
-        task_type="GPU",
+        task_type="CPU",
     )
 
 def train_classifier(clf, X_train, y_train, X_valid, y_valid):

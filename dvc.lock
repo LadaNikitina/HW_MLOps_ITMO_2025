@@ -21,33 +21,33 @@ stages:
   train:
     cmd: python src/train.py
     deps:
-    - path: data/processed
+    - path: data/processed_embeddings
       hash: md5
-      md5: c5352392fda90795dd85bdb48d8240dc.dir
-      size: 406700002
-      nfiles: 54
+      md5: 855c33175f9be25034d2fd793dbc495f.dir
+      size: 942399671
+      nfiles: 15
     - path: src/train.py
       hash: md5
-      md5: 5277d2b71674f552aff90a3a7f6adf22
+      md5: 8c15580eeea264391d0f3f65dcad52cf
       size: 1478
     outs:
     - path: models
       hash: md5
-      md5: 9a01012fbfe3c1fdb3f42f6cc19aaa36.dir
-      size: 5971368
+      md5: 118a34abed22c0bda0d084a25cb77a94.dir
+      size: 5975256
       nfiles: 5
   evaluate:
     cmd: python src/evaluate.py
     deps:
-    - path: data/processed
+    - path: data/processed_embeddings
       hash: md5
-      md5: c5352392fda90795dd85bdb48d8240dc.dir
-      size: 406700002
-      nfiles: 54
+      md5: 855c33175f9be25034d2fd793dbc495f.dir
+      size: 942399671
+      nfiles: 15
     - path: models
       hash: md5
-      md5: 9a01012fbfe3c1fdb3f42f6cc19aaa36.dir
-      size: 5971368
+      md5: 118a34abed22c0bda0d084a25cb77a94.dir
+      size: 5975256
       nfiles: 5
     - path: src/evaluate.py
       hash: md5
@@ -56,19 +56,19 @@ stages:
     outs:
     - path: metrics/H3K9me3.json
       hash: md5
-      md5: e16117a9133c370eacbac390f682fe9b
+      md5: 2c1dafbab5d82ec07445094b1c297928
       size: 18
     - path: metrics/H4K20me1.json
       hash: md5
-      md5: 01a560f1b220edb74d925efff39392a9
+      md5: d73d14f2afe2f925be09009f20b53492
       size: 19
     - path: metrics/enhancers.json
       hash: md5
-      md5: 1c4eca80d842f6b2b821d78b4e594651
+      md5: 560ba2e1d2f2ad0da7ceb0f34101f1fc
       size: 19
     - path: metrics/promoter_all.json
       hash: md5
-      md5: 845d602abacb92d02c4bf51430dbe80b
+      md5: 367a73c593cd29e8688a22902d43fda0
       size: 18
     - path: metrics/splice_sites_all.json
       hash: md5
