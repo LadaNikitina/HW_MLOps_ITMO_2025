@@ -1,0 +1,76 @@
+schema: '2.0'
+stages:
+  process:
+    cmd: python src/process.py
+    deps:
+    - path: data/embeddings
+      hash: md5
+      md5: 59b79e86ce4a00f563b12842794f71d8.dir
+      size: 939425956
+      nfiles: 15
+    - path: src/process.py
+      hash: md5
+      md5: 2301a583301f6dd25cb5cafcd2eaff0f
+      size: 1104
+    outs:
+    - path: data/processed_embeddings
+      hash: md5
+      md5: 855c33175f9be25034d2fd793dbc495f.dir
+      size: 942399671
+      nfiles: 15
+  train:
+    cmd: python src/train.py
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: c5352392fda90795dd85bdb48d8240dc.dir
+      size: 406700002
+      nfiles: 54
+    - path: src/train.py
+      hash: md5
+      md5: 5277d2b71674f552aff90a3a7f6adf22
+      size: 1478
+    outs:
+    - path: models
+      hash: md5
+      md5: 9a01012fbfe3c1fdb3f42f6cc19aaa36.dir
+      size: 5971368
+      nfiles: 5
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: c5352392fda90795dd85bdb48d8240dc.dir
+      size: 406700002
+      nfiles: 54
+    - path: models
+      hash: md5
+      md5: 9a01012fbfe3c1fdb3f42f6cc19aaa36.dir
+      size: 5971368
+      nfiles: 5
+    - path: src/evaluate.py
+      hash: md5
+      md5: 92c2df973ecc6e380822c7fa2f4d2ffc
+      size: 1939
+    outs:
+    - path: metrics/H3K9me3.json
+      hash: md5
+      md5: e16117a9133c370eacbac390f682fe9b
+      size: 18
+    - path: metrics/H4K20me1.json
+      hash: md5
+      md5: 01a560f1b220edb74d925efff39392a9
+      size: 19
+    - path: metrics/enhancers.json
+      hash: md5
+      md5: 1c4eca80d842f6b2b821d78b4e594651
+      size: 19
+    - path: metrics/promoter_all.json
+      hash: md5
+      md5: 845d602abacb92d02c4bf51430dbe80b
+      size: 18
+    - path: metrics/splice_sites_all.json
+      hash: md5
+      md5: b80e84a19eb23d80e43f1c04d830c22a
+      size: 23
