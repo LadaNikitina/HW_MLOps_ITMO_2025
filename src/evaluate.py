@@ -1,7 +1,8 @@
 import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
 from catboost import CatBoostClassifier
 from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef
 
@@ -25,16 +26,19 @@ PROCESSED_DIR = Path("data/processed_embeddings")
 MODEL_DIR = Path("models")
 METRICS_DIR = Path("metrics")
 
+
 def load_data(dataset_path: Path):
     df_test = pd.read_csv(dataset_path / "test.csv")
     X_test = df_test.drop(columns=["label"])
     y_test = df_test["label"]
     return X_test, y_test
 
+
 def load_model(model_path: Path):
     clf = CatBoostClassifier()
     clf.load_model(model_path)
     return clf
+
 
 def evaluate_model(clf, X_test, y_test, metric):
     y_pred = clf.predict(X_test)
@@ -49,6 +53,7 @@ def evaluate_model(clf, X_test, y_test, metric):
         return accuracy_score(y_test, y_pred)
     else:
         return matthews_corrcoef(y_test, y_pred)
+
 
 if __name__ == "__main__":
     METRICS_DIR.mkdir(parents=True, exist_ok=True)

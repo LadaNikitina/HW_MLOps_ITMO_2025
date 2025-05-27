@@ -1,6 +1,7 @@
 from pathlib import Path
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 RAW_ROOT = Path("data/embeddings")
 OUT_ROOT = Path("data/processed_embeddings")
@@ -15,12 +16,14 @@ DATASETS = [
 
 SPLITS = ["train.csv", "val.csv", "test.csv"]
 
+
 def add_l2_norm_feature(df: pd.DataFrame) -> pd.DataFrame:
     features = df.drop(columns=["label"]).values
     norms = np.linalg.norm(features, axis=1)
     df = df.copy()
     df["l2_norm"] = norms
     return df
+
 
 def process_dataset(dataset_name: str):
     in_dir = RAW_ROOT / dataset_name
@@ -39,6 +42,7 @@ def process_dataset(dataset_name: str):
         df = add_l2_norm_feature(df)
         df.to_csv(out_path, index=False)
         print(f"Saved {out_path}")
+
 
 if __name__ == "__main__":
     for ds in DATASETS:

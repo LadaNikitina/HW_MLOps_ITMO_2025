@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import pandas as pd
 from catboost import CatBoostClassifier
 
@@ -13,10 +14,12 @@ DATASETS = [
 DATA_DIR = Path("data/processed_embeddings")
 MODEL_DIR = Path("models")
 
+
 def load_data(dataset_path: Path):
     df_train = pd.read_csv(dataset_path / "train.csv")
     df_valid = pd.read_csv(dataset_path / "val.csv")
     return df_train, df_valid
+
 
 def create_classifier():
     return CatBoostClassifier(
@@ -27,12 +30,15 @@ def create_classifier():
         task_type="CPU",
     )
 
+
 def train_classifier(clf, X_train, y_train, X_valid, y_valid):
     clf.fit(X_train, y_train)
     return clf
 
+
 def save_model(clf, path: Path):
     clf.save_model(path)
+
 
 if __name__ == "__main__":
     for dataset in DATASETS:
