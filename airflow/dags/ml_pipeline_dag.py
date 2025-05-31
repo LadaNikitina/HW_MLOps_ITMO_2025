@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
+
 from airflow import DAG
 
 # Default arguments for the DAG
@@ -31,9 +32,7 @@ dvc_pull_data = BashOperator(
         cd /opt/airflow/workspace && \
         dvc pull
     """,
-    env={
-
-    },
+    env={},
     dag=dag,
 )
 
@@ -110,9 +109,7 @@ dvc_push = BashOperator(
         dvc push && \
         echo "DVC push completed"
     """,
-    env={
-        
-    },
+    env={},
     dag=dag,
 )
 
