@@ -128,6 +128,11 @@ dvc pull
 ### Конфигурация Airflow
 1. Установка переменных среды: склонировать `airflow.env` в `.env` или задать переменные вручную:
 ```bash
+export AWS_ACCESS_KEY_ID="YANDEX_ACCESS_KEY_ID"
+export AWS_SECRET_ACCESS_KEY="YANDEX_SECRET_ACCESS_KEY"
+export AWS_DEFAULT_REGION="ru-central1"
+export DVC_REMOTE_NAME="yandex"
+export DVC_REMOTE_URL="s3://mlops-bucket-2025/dvc-store"
 export AIRFLOW_UID=50000
 export AIRFLOW_PROJ_DIR=.
 export _AIRFLOW_WWW_USER_USERNAME=airflow
