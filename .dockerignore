@@ -1,0 +1,61 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Git (exclude large objects but keep git metadata for DVC)
+.git/objects/
+.git/logs/
+.gitignore
+
+# DVC
+.dvc/cache/
+.dvc/tmp/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Large model files
+models/
+catboost_info/
+
+# Research artifacts
+research_artifacts/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+docker-compose*.yaml
+
+# Airflow logs and temp files
+airflow/logs/
+airflow/config/
+airflow/plugins/
+
+# Large data files (keep only what's needed)
+data/embeddings/
+data/processed_embeddings/
+
+# Metrics (will be generated)
+metrics/ 
