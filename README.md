@@ -142,10 +142,10 @@ export _AIRFLOW_WWW_USER_PASSWORD=airflow
 2. Инициализация и запуск сервисов
 ```bash 
 # Инициализация
-docker-compose -f docker-compose-airflow.yaml up airflow-init
+docker compose -f docker-compose-airflow.yaml up airflow-init
 
 # Запуск
-docker-compose -f docker-compose-airflow.yaml up -d
+docker compose -f docker-compose-airflow.yaml up -d
 ```
 
 3. Теперь доступен Airflow Web UI (http://localhost:8080). 

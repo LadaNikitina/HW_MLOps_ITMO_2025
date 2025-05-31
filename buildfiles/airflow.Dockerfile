@@ -19,7 +19,7 @@ COPY --chown=airflow:root . /opt/airflow/workspace/
 # Set working directory
 WORKDIR /opt/airflow/workspace
 
-# Install Python dependencies using pip from pyproject.toml
+# Install Python dependencies using pip from pyproject.toml (includes DVC)
 RUN pip install --no-cache-dir -e .
 
 # Install additional Airflow providers
