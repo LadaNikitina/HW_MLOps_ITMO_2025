@@ -1,28 +1,60 @@
-from transformers import AutoModelForMaskedLM, AutoTokenizer
+from pathlib import Path
 
-from .dataset import load_nucleotide_transformer
-from .embeddings import get_nt_embeddings
-from .model import evaluate_model, train_classifier
+import pandas as pd
+from catboost import CatBoostClassifier
+
+DATASETS = [
+    "enhancers",
+    "promoter_all",
+    "splice_sites_all",
+    "H3K9me3",
+    "H4K20me1",
+]
+
+DATA_DIR = Path("data/processed_embeddings")
+MODEL_DIR = Path("models")
 
 
-def classify_with_dnabert(dataset_name, metric, embedding_fn=get_nt_embeddings):
-    batch_size = 128
-    train_loader, valid_loader, test_loader = load_nucleotide_transformer(
-        batch_size, valid_split=0.1, dataset_name=dataset_name
+def load_data(dataset_path: Path):
+    df_train = pd.read_csv(dataset_path / "train.csv")
+    df_valid = pd.read_csv(dataset_path / "val.csv")
+    return df_train, df_valid
+
+
+def create_classifier():
+    return CatBoostClassifier(
+        iterations=3000,
+        learning_rate=0.02,
+        depth=4,
+        verbose=50,
+        task_type="CPU",
     )
 
-    model_name = "InstaDeepAI/nucleotide-transformer-v2-50m-multi-species"
-    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    model = AutoModelForMaskedLM.from_pretrained(model_name, trust_remote_code=True)
 
-    model.eval()
+def train_classifier(clf, X_train, y_train, X_valid, y_valid):
+    clf.fit(X_train, y_train)
+    return clf
 
-    X_train, y_train = embedding_fn(train_loader, tokenizer, model)
-    X_valid, y_valid = embedding_fn(valid_loader, tokenizer, model)
-    X_test, y_test = embedding_fn(test_loader, tokenizer, model)
 
-    clf = train_classifier(X_train, y_train, X_valid, y_valid, metric)
-    metric_value = evaluate_model(clf, X_test, y_test, metric)
+def save_model(clf, path: Path):
+    clf.save_model(path)
 
-    print(f"{metric}: {metric_value:.4f}")
-    return metric_value
+
+if __name__ == "__main__":
+    for dataset in DATASETS:
+        print(f"\nTraining on: {dataset}")
+        dataset_path = DATA_DIR / dataset
+        df_train, df_valid = load_data(dataset_path)
+
+        X_train = df_train.drop(columns=["label"])
+        y_train = df_train["label"]
+        X_valid = df_valid.drop(columns=["label"])
+        y_valid = df_valid["label"]
+
+        clf = create_classifier()
+        clf = train_classifier(clf, X_train, y_train, X_valid, y_valid)
+
+        model_out_path = MODEL_DIR / dataset / "model.cbm"
+        model_out_path.parent.mkdir(parents=True, exist_ok=True)
+        save_model(clf, model_out_path)
+        print(f"Model saved to {model_out_path}")

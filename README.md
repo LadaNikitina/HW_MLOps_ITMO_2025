@@ -116,3 +116,65 @@ dvc remote modify yandex access_key_id <access-key> --local
 dvc remote modify yandex secret_access_key <secret-key> --local
 dvc pull
 ```
+
+# Домашнее задание 3
+Для выполнения ДЗ весь пайплайн был адаптирован в 3 скрипта в папке `src`:
+- `process.py` - предобработка данных
+- `train.py` - обучение моделей
+- `evaluate.py` - подсчет метрик
+
+Был настроен Airflow для автоматического запуска скриптов. Для сборки Airflow и поднятия необходимых сервисов используется Docker-конфигурация
+
+### Конфигурация Airflow
+1. Установка переменных среды: склонировать `airflow.env` в `.env` или задать переменные вручную:
+```bash
+export AWS_ACCESS_KEY_ID="YANDEX_ACCESS_KEY_ID"
+export AWS_SECRET_ACCESS_KEY="YANDEX_SECRET_ACCESS_KEY"
+export AWS_DEFAULT_REGION="ru-central1"
+export DVC_REMOTE_NAME="yandex"
+export DVC_REMOTE_URL="s3://mlops-bucket-2025/dvc-store"
+export AIRFLOW_UID=50000
+export AIRFLOW_PROJ_DIR=.
+export _AIRFLOW_WWW_USER_USERNAME=airflow
+export _AIRFLOW_WWW_USER_PASSWORD=airflow
+```
+
+2. Инициализация и запуск сервисов
+```bash 
+# Инициализация
+docker compose -f docker-compose-airflow.yaml up airflow-init
+
+# Запуск
+docker compose -f docker-compose-airflow.yaml up -d
+```
+
+3. Теперь доступен Airflow Web UI (http://localhost:8080). 
+
+Данные для входа:
+- Username: `airflow`
+- Password: `airflow`
+
+### Обзор DAG
+Был создан граф `ml_pipeline` со следующими задачами:
+1. `check_data_availability`: Проверяет наличие данных
+2. `process_data`: Запускает `src/process.py`
+3. `train_models`: Запускает `src/train.py`
+4. `evaluate_models`: Запускает `src/evaluate.py`
+
+#### Работа с пайплайном
+1. Посмотреть доступные для проекта пайплайны
+```bash
+docker compose -f docker-compose-airflow.yaml exec airflow-webserver python -m airflow dags list
+```
+2. Вывести `ml_pipeline` из режима "паузы"
+```
+docker compose -f docker-compose-airflow.yaml exec airflow-webserver python -m airflow dags unpause ml_pipeline
+```
+3. Запустить `ml_pipeline`
+```bash
+docker compose -f docker-compose-airflow.yaml exec airflow-webserver python -m airflow dags trigger ml_pipeline
+```
+4. Посмотреть состояние
+```bash
+docker compose -f docker-compose-airflow.yaml exec airflow-webserver python -m airflow dags state ml_pipeline <dag_run_id>
+```
