@@ -178,3 +178,56 @@ docker compose -f docker-compose-airflow.yaml exec airflow-webserver python -m a
 ```bash
 docker compose -f docker-compose-airflow.yaml exec airflow-webserver python -m airflow dags state ml_pipeline <dag_run_id>
 ```
+
+# Домашнее задание 4
+
+В качестве системы трекинга экспериментов был выбран MLflow.
+
+## Инструкция по подключению:
+
+1. Установить зависимость:
+
+   ```bash
+   uv pip install mlflow
+   ```
+2. Добавить логирование в `src/train.py` и `src/evaluate.py`:
+
+   * `mlflow.log_param(...)` — для гиперпараметров.
+   * `mlflow.log_metric(...)` — для метрик.
+   * `mlflow.log_artifact(...)` — для модели и json-результатов.
+3. Запуск интерфейса:
+
+   ```bash
+   mlflow ui
+   ```
+
+   Затем открыть [http://localhost:5000](http://localhost:5000)
+
+
+## Проведение 3 экспериментов + логирование
+
+Для контроля версий данных используется DVC.
+Все входные эмбеддинги (data/embeddings/) получаются через dvc pull из облачного хранилища.
+Эти данные участвуют в пайплайне process -> train -> evaluate, как указано в dvc.yaml.
+
+Запуск экспериментов реализован через dvc.yaml в 3 разных конфигурациях. Запуск осуществляется при помощи `dvc.repro`.
+
+Проведено 3 эксперимента с разными моделями:
+
+| Модель        | Гиперпараметры     | Папка             |
+| ------------- | ------------------ | ----------------- |
+| CatBoost      | `depth=4, lr=0.02` | `models/catboost` |
+| Random Forest | `depth=6`          | `models/rf`       |
+| LightGBM      | `depth=6, lr=0.05` | `models/lgbm`     |
+
+Каждая модель обучалась на 5 датасетах, один датасет - один тип задачи.
+Оценка производилась на test-сплите с сохранением метрик `F1`, `MCC`, `Accuracy` в папку `mlflow_metrics/`.
+
+## Что логируется в MLflow:
+
+* Параметры обучения
+* Метрика на тесте
+* Файл модели
+* JSON-файл с метрикой
+
+Логирование артефактов реализовано в скриптах пайплайна в папке src/train.py, src/evaluate.py.
