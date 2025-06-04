@@ -10,8 +10,8 @@ stages:
       nfiles: 15
     - path: src/process.py
       hash: md5
-      md5: 2301a583301f6dd25cb5cafcd2eaff0f
-      size: 1104
+      md5: ffd17e877f81c3f9eaedbe42a8ae1b23
+      size: 1108
     outs:
     - path: data/processed_embeddings
       hash: md5
@@ -44,33 +44,84 @@ stages:
       md5: 855c33175f9be25034d2fd793dbc495f.dir
       size: 942399671
       nfiles: 15
-    - path: models
+    - path: models/catboost
       hash: md5
-      md5: 118a34abed22c0bda0d084a25cb77a94.dir
-      size: 5975256
+      md5: 50363ca94df981e8c9a825158d943b5d.dir
+      size: 5974896
+      nfiles: 5
+    - path: models/lgbm
+      hash: md5
+      md5: 063dab70c68e1ba705f02a47c5397c4c.dir
+      size: 7577468
+      nfiles: 5
+    - path: models/rf
+      hash: md5
+      md5: 03b1ff33c4486975357f8783bf7552a7.dir
+      size: 5226741
       nfiles: 5
     - path: src/evaluate.py
       hash: md5
-      md5: 92c2df973ecc6e380822c7fa2f4d2ffc
-      size: 1939
+      md5: 55a47e6c4484063ad29e1fe4d7ad5f80
+      size: 3161
     outs:
-    - path: metrics/H3K9me3.json
+    - path: mlflow_metrics
       hash: md5
-      md5: 2c1dafbab5d82ec07445094b1c297928
-      size: 18
-    - path: metrics/H4K20me1.json
+      md5: d02dc4ae8113e2492edcff25803c3fc8.dir
+      size: 292
+      nfiles: 15
+  train_catboost:
+    cmd: python src/train.py --model catboost --depth 4 --lr 0.02 --out_suffix catboost
+    deps:
+    - path: data/processed_embeddings
       hash: md5
-      md5: d73d14f2afe2f925be09009f20b53492
-      size: 19
-    - path: metrics/enhancers.json
+      md5: 855c33175f9be25034d2fd793dbc495f.dir
+      size: 942399671
+      nfiles: 15
+    - path: src/train.py
       hash: md5
-      md5: 560ba2e1d2f2ad0da7ceb0f34101f1fc
-      size: 19
-    - path: metrics/promoter_all.json
+      md5: 2af496d88bd165a17004d50bf66a07e4
+      size: 3668
+    outs:
+    - path: models/catboost
       hash: md5
-      md5: 367a73c593cd29e8688a22902d43fda0
-      size: 18
-    - path: metrics/splice_sites_all.json
+      md5: 50363ca94df981e8c9a825158d943b5d.dir
+      size: 5974896
+      nfiles: 5
+  train_lightgbm:
+    cmd: python src/train.py --model lightgbm --depth 8 --lr=0.05 --iterations 300
+      --out_suffix lgbm
+    deps:
+    - path: data/processed_embeddings
       hash: md5
-      md5: b80e84a19eb23d80e43f1c04d830c22a
-      size: 23
+      md5: 855c33175f9be25034d2fd793dbc495f.dir
+      size: 942399671
+      nfiles: 15
+    - path: src/train.py
+      hash: md5
+      md5: 2af496d88bd165a17004d50bf66a07e4
+      size: 3668
+    outs:
+    - path: models/lgbm
+      hash: md5
+      md5: 063dab70c68e1ba705f02a47c5397c4c.dir
+      size: 7577468
+      nfiles: 5
+  train_random_forest:
+    cmd: python src/train.py --model random_forest --depth 6 --iterations 300 --out_suffix
+      rf
+    deps:
+    - path: data/processed_embeddings
+      hash: md5
+      md5: 855c33175f9be25034d2fd793dbc495f.dir
+      size: 942399671
+      nfiles: 15
+    - path: src/train.py
+      hash: md5
+      md5: 2af496d88bd165a17004d50bf66a07e4
+      size: 3668
+    outs:
+    - path: models/rf
+      hash: md5
+      md5: 03b1ff33c4486975357f8783bf7552a7.dir
+      size: 5226741
+      nfiles: 5

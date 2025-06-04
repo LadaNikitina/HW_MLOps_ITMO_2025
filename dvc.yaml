@@ -7,23 +7,37 @@ stages:
     outs:
       - data/processed_embeddings
 
-  train:
-    cmd: python src/train.py
+  train_lightgbm:
+    cmd: python src/train.py --model lightgbm --depth 8 --lr=0.05 --iterations 300 --out_suffix lgbm
     deps:
       - src/train.py
       - data/processed_embeddings
     outs:
-      - models
+      - models/lgbm
+
+  train_random_forest:
+    cmd: python src/train.py --model random_forest --depth 6 --iterations 300 --out_suffix rf
+    deps:
+      - src/train.py
+      - data/processed_embeddings
+    outs:
+      - models/rf
+      
+  train_catboost:
+    cmd: python src/train.py --model catboost --depth 4 --lr 0.02 --out_suffix catboost
+    deps:
+      - src/train.py
+      - data/processed_embeddings
+    outs:
+      - models/catboost
 
   evaluate:
     cmd: python src/evaluate.py
     deps:
       - src/evaluate.py
+      - models/catboost
+      - models/rf
+      - models/lgbm
       - data/processed_embeddings
-      - models
-    metrics:
-      - metrics/enhancers.json
-      - metrics/promoter_all.json
-      - metrics/splice_sites_all.json
-      - metrics/H3K9me3.json
-      - metrics/H4K20me1.json
+    outs:
+      - mlflow_metrics
