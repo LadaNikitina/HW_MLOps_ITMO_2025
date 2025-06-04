@@ -231,3 +231,32 @@ docker compose -f docker-compose-airflow.yaml exec airflow-webserver python -m a
 * JSON-файл с метрикой
 
 Логирование артефактов реализовано в скриптах пайплайна в папке src/train.py, src/evaluate.py.
+
+## Результаты из MLflow
+
+На примере скриншотов можно посмотреть результаты трех экспериментов из MLflow UI:
+
+![image](https://github.com/user-attachments/assets/1af4679f-9cbb-4f90-bef9-0598e97ada60)
+
+По скриншоту сравнения моделей на каждой задаче:
+
+### H4K20me1
+
+![image](https://github.com/user-attachments/assets/a903a971-a6a7-4a87-b185-2e6fb68e0b5d)
+
+### H3K9me3
+
+![image](https://github.com/user-attachments/assets/4716cf91-caa3-4194-9d67-976ba6b4cb0d)
+
+### splice_sites_all
+
+![image](https://github.com/user-attachments/assets/a9b24918-9b09-4a5f-b85a-ef193573d0c7)
+
+### promoter_all
+
+![image](https://github.com/user-attachments/assets/b9d62657-52b2-42e5-9f2e-f6355582c550)
+
+### enhancers
+
+![image](https://github.com/user-attachments/assets/7aacd22c-748c-4b70-b7ca-74021d8e235c)
+
