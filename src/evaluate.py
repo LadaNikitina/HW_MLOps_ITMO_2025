@@ -1,13 +1,11 @@
 import json
-import joblib
 from pathlib import Path
-import mlflow
 
+import joblib
+import mlflow
 import numpy as np
 import pandas as pd
 from catboost import CatBoostClassifier
-from sklearn.ensemble import RandomForestClassifier
-from lightgbm import LGBMClassifier
 from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef
 
 DATASETS = [
@@ -77,7 +75,10 @@ if __name__ == "__main__":
 
         for dataset in DATASETS:
             model_path = MODEL_DIR / exp_name / dataset / f"{model_name}_model"
-            if not model_path.with_suffix(".cbm").exists() and not model_path.with_suffix(".pkl").exists():
+            if (
+                not model_path.with_suffix(".cbm").exists()
+                and not model_path.with_suffix(".pkl").exists()
+            ):
                 print(f"Skipping missing model: {model_path}")
                 continue
 

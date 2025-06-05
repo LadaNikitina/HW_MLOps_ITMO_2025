@@ -1,12 +1,12 @@
-from pathlib import Path
 import argparse
-import pandas as pd
-import mlflow
-import joblib
+from pathlib import Path
 
+import joblib
+import mlflow
+import pandas as pd
 from catboost import CatBoostClassifier
-from sklearn.ensemble import RandomForestClassifier
 from lightgbm import LGBMClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 DATASETS = [
     "enhancers",
@@ -36,17 +36,14 @@ def create_classifier(model_name, **kwargs):
             kwargs["n_estimators"] = kwargs.pop("iterations")
         if "lr" in kwargs:
             kwargs["learning_rate"] = kwargs.pop("lr")
-        
+
         kwargs.setdefault("num_leaves", 31)
         kwargs.setdefault("min_split_gain", 0.0)
         kwargs.setdefault("min_child_samples", 20)
-        
+
         return LGBMClassifier(verbose=300, eval_metric="logloss", **kwargs)
     elif model_name == "random_forest":
-        filtered = {
-            "max_depth": kwargs.get("depth"),
-            "n_estimators": kwargs.get("iterations", 100)
-        }
+        filtered = {"max_depth": kwargs.get("depth"), "n_estimators": kwargs.get("iterations", 100)}
         return RandomForestClassifier(**{k: v for k, v in filtered.items() if v is not None})
     else:
         raise ValueError(f"Unknown model: {model_name}")
@@ -67,7 +64,9 @@ def save_model(clf, path: Path, model_name: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, choices=["catboost", "lightgbm", "random_forest"], default="catboost")
+    parser.add_argument(
+        "--model", type=str, choices=["catboost", "lightgbm", "random_forest"], default="catboost"
+    )
     parser.add_argument("--depth", type=int, default=4)
     parser.add_argument("--lr", type=float, default=0.02)
     parser.add_argument("--iterations", type=int, default=3000)
@@ -103,6 +102,9 @@ if __name__ == "__main__":
             model_out_path = MODEL_DIR / args.out_suffix / dataset / f"{args.model}_model"
             save_model(clf, model_out_path, args.model)
 
-            mlflow.log_artifact(str(model_out_path.with_suffix(".cbm" if args.model == "catboost" else ".pkl")), artifact_path="models")
+            mlflow.log_artifact(
+                str(model_out_path.with_suffix(".cbm" if args.model == "catboost" else ".pkl")),
+                artifact_path="models",
+            )
 
             print(f"Model saved to {model_out_path}")
