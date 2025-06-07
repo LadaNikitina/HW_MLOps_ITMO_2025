@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import joblib
+import mlflow
 import numpy as np
 import pandas as pd
 from catboost import CatBoostClassifier
@@ -22,9 +24,15 @@ METRICS = {
     "H4K20me1": "MCC",
 }
 
+EXPERIMENTS = {
+    "catboost": "catboost",
+    "rf": "random_forest",
+    "lgbm": "lightgbm",
+}
+
 PROCESSED_DIR = Path("data/processed_embeddings")
 MODEL_DIR = Path("models")
-METRICS_DIR = Path("metrics")
+METRICS_DIR = Path("mlflow_metrics")
 
 
 def load_data(dataset_path: Path):
@@ -34,16 +42,20 @@ def load_data(dataset_path: Path):
     return X_test, y_test
 
 
-def load_model(model_path: Path):
-    clf = CatBoostClassifier()
-    clf.load_model(model_path)
-    return clf
+def load_model(path: Path, model_type: str):
+    if model_type == "catboost":
+        model = CatBoostClassifier()
+        model.load_model(str(path.with_suffix(".cbm")))
+        return model
+    else:
+        return joblib.load(path.with_suffix(".pkl"))
 
 
 def evaluate_model(clf, X_test, y_test, metric):
     y_pred = clf.predict(X_test)
-    if y_pred.ndim == 1:
-        y_pred = (y_pred > 0.5).astype(int)
+
+    if hasattr(y_pred, "ndim") and y_pred.ndim == 1:
+        y_pred = (y_pred > 0.5).astype(int) if len(np.unique(y_test)) == 2 else y_pred
     else:
         y_pred = np.argmax(y_pred, axis=1)
 
@@ -58,19 +70,36 @@ def evaluate_model(clf, X_test, y_test, metric):
 if __name__ == "__main__":
     METRICS_DIR.mkdir(parents=True, exist_ok=True)
 
-    for dataset in DATASETS:
-        print(f"\nEvaluating {dataset}...")
+    for exp_name, model_name in EXPERIMENTS.items():
+        mlflow.set_experiment(f"eval_{exp_name}")
 
-        X_test, y_test = load_data(PROCESSED_DIR / dataset)
-        model_path = MODEL_DIR / dataset / "model.cbm"
-        clf = load_model(model_path)
+        for dataset in DATASETS:
+            model_path = MODEL_DIR / exp_name / dataset / f"{model_name}_model"
+            if (
+                not model_path.with_suffix(".cbm").exists()
+                and not model_path.with_suffix(".pkl").exists()
+            ):
+                print(f"Skipping missing model: {model_path}")
+                continue
 
-        metric_name = METRICS[dataset]
-        score = evaluate_model(clf, X_test, y_test, metric_name)
+            print(f"\nEvaluating {dataset} with {model_name}...")
 
-        result = {metric_name: round(score, 4)}
-        out_path = METRICS_DIR / f"{dataset}.json"
-        with open(out_path, "w") as f:
-            json.dump(result, f, indent=2)
+            X_test, y_test = load_data(PROCESSED_DIR / dataset)
+            clf = load_model(model_path, model_name)
 
-        print(f"{metric_name} = {score:.4f} → saved to {out_path}")
+            metric_name = METRICS[dataset]
+            score = evaluate_model(clf, X_test, y_test, metric_name)
+
+            result = {metric_name: round(score, 4)}
+            out_path = METRICS_DIR / f"{dataset}_{exp_name}.json"
+            with open(out_path, "w") as f:
+                json.dump(result, f, indent=2)
+
+            with mlflow.start_run(run_name=f"{dataset}_{exp_name}"):
+                mlflow.log_param("dataset", dataset)
+                mlflow.log_param("model", model_name)
+                mlflow.log_param("metric", metric_name)
+                mlflow.log_metric(metric_name, score)
+                mlflow.log_artifact(str(out_path), artifact_path="mlflow_metrics")
+
+            print(f"{metric_name} = {score:.4f} → saved to {out_path}")

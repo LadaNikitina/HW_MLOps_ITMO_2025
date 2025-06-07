@@ -178,3 +178,158 @@ docker compose -f docker-compose-airflow.yaml exec airflow-webserver python -m a
 ```bash
 docker compose -f docker-compose-airflow.yaml exec airflow-webserver python -m airflow dags state ml_pipeline <dag_run_id>
 ```
+
+# Домашнее задание 4
+
+В качестве системы трекинга экспериментов был выбран MLflow.
+
+## Инструкция по подключению:
+
+1. Установить зависимость:
+
+   ```bash
+   uv pip install mlflow
+   ```
+2. Добавить логирование в `src/train.py` и `src/evaluate.py`:
+
+   * `mlflow.log_param(...)` - для гиперпараметров.
+   * `mlflow.log_metric(...)` - для метрик.
+   * `mlflow.log_artifact(...)` - для модели и json-результатов.
+3. Запуск интерфейса:
+
+   ```bash
+   mlflow ui
+   ```
+
+   Затем открыть [http://localhost:5000](http://localhost:5000)
+
+
+## Проведение 3 экспериментов + логирование
+
+Для контроля версий данных используется DVC.
+Все входные эмбеддинги (data/embeddings/) получаются через dvc pull из облачного хранилища.
+Эти данные участвуют в пайплайне process -> train -> evaluate, как указано в dvc.yaml.
+
+Запуск экспериментов реализован через dvc.yaml в 3 разных конфигурациях. Запуск осуществляется при помощи `dvc repro`.
+
+Проведено 3 эксперимента с разными моделями:
+
+| Модель        | Гиперпараметры     | Папка             |
+| ------------- | ------------------ | ----------------- |
+| CatBoost      | `depth=4, lr=0.02` | `models/catboost` |
+| Random Forest | `depth=6`          | `models/rf`       |
+| LightGBM      | `depth=6, lr=0.05` | `models/lgbm`     |
+
+Каждая модель обучалась на 5 датасетах, один датасет - один тип задачи.
+Оценка производилась на test-сплите с сохранением метрик `F1`, `MCC`, `Accuracy` в папку `mlflow_metrics/`.
+
+## Что логируется в MLflow:
+
+* Параметры обучения
+* Метрика на тесте
+* Файл модели
+* JSON-файл с метрикой
+
+Логирование артефактов реализовано в скриптах пайплайна в папке src/train.py, src/evaluate.py.
+
+## Результаты из MLflow
+
+На примере скриншотов можно посмотреть результаты трех экспериментов из MLflow UI:
+
+![image](https://github.com/user-attachments/assets/1af4679f-9cbb-4f90-bef9-0598e97ada60)
+
+По скриншоту сравнения моделей на каждой задаче:
+
+### H4K20me1
+
+![image](https://github.com/user-attachments/assets/a903a971-a6a7-4a87-b185-2e6fb68e0b5d)
+
+### H3K9me3
+
+![image](https://github.com/user-attachments/assets/4716cf91-caa3-4194-9d67-976ba6b4cb0d)
+
+### splice_sites_all
+
+![image](https://github.com/user-attachments/assets/a9b24918-9b09-4a5f-b85a-ef193573d0c7)
+
+### promoter_all
+
+![image](https://github.com/user-attachments/assets/b9d62657-52b2-42e5-9f2e-f6355582c550)
+
+### enhancers
+
+![image](https://github.com/user-attachments/assets/7aacd22c-748c-4b70-b7ca-74021d8e235c)
+
+## Сравнительный анализ
+
+Сравнительный анализ моделей был выполнен в research_artifacts/MLflow_model_comparison.ipynb. 
+
+Анализ проведён на основе логов из MLflow, собранных по экспериментам `eval_catboost`, `eval_rf`, `eval_lgbm`.
+
+### Лучшие модели по задачам
+
+Лучшие модели по задачам:
+| Задача           | Лучшая модель | Метрика   | Значение |
+|------------------|---------------|-----------|----------|
+| H3K9me3          | catboost      | MCC       | 0.2706   |
+| H4K20me1         | catboost      | MCC       | 0.5823   |
+| enhancers        | lightgbm      | MCC       | 0.4818   |
+| promoter_all     | lightgbm      | F1        | 0.8580   |
+| splice_sites_all | lightgbm      | Accuracy  | 0.5470   |
+
+LightGBM показала наилучшие результаты в трёх задачах из пяти - особенно хорошие результаты получились для с классификации промоторов и сайтов сплайсинга.  
+CatBoost стал лидером в задачах, связанных с эпигенетическими метками (H3K9me3 и H4K20me1).  
+
+## Худшие модели по задачам
+
+Худшие модели по задачам:
+
+| Задача           | Худшая модель  | Метрика   | Значение |
+|------------------|----------------|-----------|----------|
+| H3K9me3          | random_forest  | MCC       | 0.2250   |
+| H4K20me1         | random_forest  | MCC       | 0.5095   |
+| enhancers        | random_forest  | MCC       | 0.4296   |
+| promoter_all     | random_forest  | F1        | 0.8399   |
+| splice_sites_all | catboost       | Accuracy  | 0.3430   |
+
+Random Forest чаще всего показывал наихудшие результаты - в четырёх из пяти задач, особенно по метрике MCC.  
+CatBoost оказался худшим только в одной задаче - определении сайтов сплайсинга, где он заметно отстал по метрике Accuracy.  
+
+## Лучшая и худшая модель по числу побед
+
+| Модель         | Количество побед |
+|----------------|------------------|
+| lightgbm       | 3                |
+| random_forest  | 0                |
+
+LightGBM - модель с наибольшим числом побед, в трёх из пяти задач.  
+Random Forest с наименьшим, 0 задач, слабая модель.
+
+## Сравнение моделей
+
+Агрегированная визуализация метрик моделей по всем задачам:
+
+![image](https://github.com/user-attachments/assets/b12cadea-9a34-4ae2-86ea-66023ea68958)
+
+## Полные результаты
+
+Полный список экспериментов, включая модель, метрику и значение по каждой задаче:
+
+
+| Задача           | Модель         | Метрика   | Значение | Эксперимент     |
+|------------------|----------------|-----------|----------|-----------------|
+| H3K9me3          | catboost       | MCC       | 0.2706   | eval_catboost   |
+| H3K9me3          | lightgbm       | MCC       | 0.2570   | eval_lgbm       |
+| H3K9me3          | random_forest  | MCC       | 0.2250   | eval_rf         |
+| H4K20me1         | catboost       | MCC       | 0.5823   | eval_catboost   |
+| H4K20me1         | lightgbm       | MCC       | 0.5791   | eval_lgbm       |
+| H4K20me1         | random_forest  | MCC       | 0.5095   | eval_rf         |
+| enhancers        | catboost       | MCC       | 0.4789   | eval_catboost   |
+| enhancers        | lightgbm       | MCC       | 0.4818   | eval_lgbm       |
+| enhancers        | random_forest  | MCC       | 0.4296   | eval_rf         |
+| promoter_all     | catboost       | F1        | 0.8531   | eval_catboost   |
+| promoter_all     | lightgbm       | F1        | 0.8580   | eval_lgbm       |
+| promoter_all     | random_forest  | F1        | 0.8399   | eval_rf         |
+| splice_sites_all | catboost       | Accuracy  | 0.3430   | eval_catboost   |
+| splice_sites_all | lightgbm       | Accuracy  | 0.5470   | eval_lgbm       |
+| splice_sites_all | random_forest  | Accuracy  | 0.5107   | eval_rf         |
