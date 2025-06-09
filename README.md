@@ -248,6 +248,57 @@ docker compose -f docker-compose-airflow.yaml exec airflow-webserver python -m a
 
 ![image](https://github.com/user-attachments/assets/4716cf91-caa3-4194-9d67-976ba6b4cb0d)
 
+# Домашнее задание 5 - API Сервис
+
+## Описание
+
+Сервис реализован при помощи фреймворка FastAPI. Сервис поддерживает:
+
+- Конфигурирование параметров моделей
+- Мониторинг здоровья сервиса
+- Docker развертывание
+
+## Запуск всех версий API через Docker
+
+```bash
+# Сборка и запуск всех сервисов
+docker-compose -f docker-compose.api.yml up --build
+
+# API endpoints:
+# CatBoost:      http://localhost:8001
+# LightGBM:      http://localhost:8002  
+# Random Forest: http://localhost:8003
+```
+
+## API Endpoints
+
+- `GET /health` - Проверка состояния сервиса
+- `GET /models` - Список доступных моделей
+- `POST /predict` - Одиночное предсказание
+- `GET /models/{model_version}/datasets` - Датасеты для модели
+
+### Predictions
+`/predict` ожидает эмбеддинг в виде списка `features`. На стороне API происходит препроцессинг данных и они преобразуются в вид, с которым умеет работать модель
+
+Пример использования (на сгенерированных данных):
+```bash
+# Генерируем данные
+uv run python -c "import json; import random; random.seed(42); features = [random.normalvariate(0, 1) for _ in range(512)]; request_data = {'features': features, 'dataset': 'enhancers'}; print(json.dumps(request_data))" > /tmp/test_request_512.json
+
+# Отправляем запрос
+echo "Testing CatBoost model..." && curl -X POST "http://localhost:8001/predict?model_version=catboost" -H "accept: application/json" -H "Content-Type: application/json" -d @/tmp/test_request_512.json
+```
+
+## Конфигурация
+
+Для каждого сервиса был настроен свой конфигурационный файл:
+
+- `api/config-catboost.json` - CatBoost
+- `api/config-lgbm.json` - LightGBM
+- `api/config-rf.json` - Random Forest
+
+Это позволяет внутри одного сервиса разворачивать разные модели, что может быть полезно для тестирования 2 разных версий одной и той же модели (разворачиваем их внутри двух разных сервисов)
+
 ### splice_sites_all
 
 ![image](https://github.com/user-attachments/assets/a9b24918-9b09-4a5f-b85a-ef193573d0c7)

@@ -1,0 +1,36 @@
+{
+  "default_model_version": "catboost",
+  "model_paths": {
+    "catboost": "models/catboost"
+  },
+  "datasets": [
+    "enhancers",
+    "promoter_all", 
+    "splice_sites_all",
+    "H3K9me3",
+    "H4K20me1"
+  ],
+  "model_configs": {
+    "catboost": {
+      "description": "CatBoost Classifier",
+      "hyperparameters": {
+        "depth": 4,
+        "learning_rate": 0.02,
+        "iterations": 3000
+      },
+      "file_extension": ".cbm"
+    }
+  },
+  "dataset_metrics": {
+    "enhancers": "MCC",
+    "promoter_all": "F1",
+    "splice_sites_all": "Accuracy", 
+    "H3K9me3": "MCC",
+    "H4K20me1": "MCC"
+  },
+  "api_settings": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "log_level": "INFO"
+  }
+} 

@@ -37,7 +37,7 @@ Thumbs.db
 logs/
 
 # Large model files
-models/
+# models/  # Commented out for FastAPI testing
 catboost_info/
 
 # Research artifacts
