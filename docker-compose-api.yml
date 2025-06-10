@@ -1,0 +1,82 @@
+services:
+  api-catboost:
+    build:
+      context: .
+      dockerfile: buildfiles/api.Dockerfile
+    container_name: dna-api-catboost
+    ports:
+      - "8001:8000"
+    environment:
+      - MODEL_VERSION=catboost
+      - API_NAME=catboost-api
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./api/config-catboost.json:/app/api/config.json:ro
+      - ./models:/app/models:ro
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - dna-api-network
+
+  api-lightgbm:
+    build:
+      context: .
+      dockerfile: buildfiles/api.Dockerfile
+    container_name: dna-api-lightgbm
+    ports:
+      - "8002:8000"
+    environment:
+      - MODEL_VERSION=lgbm
+      - API_NAME=lightgbm-api
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./api/config-lgbm.json:/app/api/config.json:ro
+      - ./models:/app/models:ro
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - dna-api-network
+
+  api-random-forest:
+    build:
+      context: .
+      dockerfile: buildfiles/api.Dockerfile
+    container_name: dna-api-rf
+    ports:
+      - "8003:8000"
+    environment:
+      - MODEL_VERSION=rf
+      - API_NAME=random-forest-api
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./api/config-rf.json:/app/api/config.json:ro
+      - ./models:/app/models:ro
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - dna-api-network
+
+networks:
+  dna-api-network:
+    driver: bridge 
