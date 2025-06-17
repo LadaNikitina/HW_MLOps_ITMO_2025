@@ -1,5 +1,7 @@
 import json
 import logging
+import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -8,7 +10,9 @@ import joblib
 import numpy as np
 import pandas as pd
 from catboost import CatBoostClassifier
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 from pydantic import BaseModel, Field
 
 logging.basicConfig(level=logging.INFO)
@@ -16,6 +20,37 @@ logger = logging.getLogger(__name__)
 
 models_cache = {}
 config = {}
+
+# Prometheus metrics
+REQUEST_COUNT = Counter(
+    "fastapi_requests_total",
+    "Total number of requests",
+    ["method", "endpoint", "status_code", "model_version"],
+)
+
+REQUEST_DURATION = Histogram(
+    "fastapi_request_duration_seconds",
+    "Request duration in seconds",
+    ["method", "endpoint", "model_version"],
+)
+
+PREDICTION_COUNT = Counter(
+    "ml_predictions_total", "Total number of ML predictions", ["model_version", "dataset", "status"]
+)
+
+PREDICTION_DURATION = Histogram(
+    "ml_prediction_duration_seconds",
+    "ML prediction duration in seconds",
+    ["model_version", "dataset"],
+)
+
+LOADED_MODELS = Gauge("ml_loaded_models", "Number of loaded models", ["model_version", "dataset"])
+
+MODEL_MEMORY_USAGE = Gauge(
+    "ml_model_memory_usage_bytes",
+    "Estimated memory usage of loaded models",
+    ["model_version", "dataset"],
+)
 
 
 def load_config():
@@ -73,10 +108,14 @@ def load_models():
                 if model is not None:
                     models_cache[model_name][dataset] = model
                     logger.info(f"Загружена модель: {model_name}/{dataset}")
+                    # Update Prometheus metrics
+                    LOADED_MODELS.labels(model_version=model_name, dataset=dataset).set(1)
                 else:
                     logger.warning(f"Не удалось загрузить модель: {model_name}/{dataset}")
+                    LOADED_MODELS.labels(model_version=model_name, dataset=dataset).set(0)
             else:
                 logger.warning(f"Директория модели не найдена: {model_path}")
+                LOADED_MODELS.labels(model_version=model_name, dataset=dataset).set(0)
 
 
 @asynccontextmanager
@@ -99,6 +138,40 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+
+# Middleware to track request metrics
+@app.middleware("http")
+async def prometheus_middleware(request: Request, call_next):
+    start_time = time.time()
+
+    # Get model version from environment variable
+    model_version = os.getenv("MODEL_VERSION", "unknown")
+
+    response = await call_next(request)
+
+    # Calculate duration
+    duration = time.time() - start_time
+
+    # Update metrics
+    REQUEST_COUNT.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        status_code=response.status_code,
+        model_version=model_version,
+    ).inc()
+
+    REQUEST_DURATION.labels(
+        method=request.method, endpoint=request.url.path, model_version=model_version
+    ).observe(duration)
+
+    return response
+
+
+# Metrics endpoint
+@app.get("/metrics", tags=["Monitoring"])
+async def get_metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 class PredictionRequest(BaseModel):
@@ -172,6 +245,11 @@ async def predict(
 
     if model_version not in models_cache:
         available_models = list(models_cache.keys())
+        PREDICTION_COUNT.labels(
+            model_version=model_version or "unknown",
+            dataset=request.dataset,
+            status="model_not_found",
+        ).inc()
         raise HTTPException(
             status_code=404,
             detail=f"Версия модели '{model_version}' не найдена. Доступные модели: {available_models}",
@@ -179,21 +257,42 @@ async def predict(
 
     if request.dataset not in models_cache[model_version]:
         available_datasets = list(models_cache[model_version].keys())
+        PREDICTION_COUNT.labels(
+            model_version=model_version, dataset=request.dataset, status="dataset_not_found"
+        ).inc()
         raise HTTPException(
             status_code=404,
             detail=f"Модель для датасета '{request.dataset}' версии '{model_version}' не найдена. Доступные датасеты: {available_datasets}",
         )
 
     try:
+        # Start timing prediction
+        prediction_start_time = time.time()
+
         model = models_cache[model_version][request.dataset]
         features = preprocess_features(request.features)
         y_pred = model.predict(features)
+
+        # Record successful prediction
+        prediction_duration = time.time() - prediction_start_time
+        PREDICTION_DURATION.labels(model_version=model_version, dataset=request.dataset).observe(
+            prediction_duration
+        )
+
+        PREDICTION_COUNT.labels(
+            model_version=model_version, dataset=request.dataset, status="success"
+        ).inc()
 
         return PredictionResponse(
             prediction=y_pred, dataset=request.dataset, model_version=model_version
         )
 
     except Exception as e:
+        # Record failed prediction
+        PREDICTION_COUNT.labels(
+            model_version=model_version, dataset=request.dataset, status="error"
+        ).inc()
+
         logger.error(f"Ошибка предсказания: {e}")
         raise HTTPException(status_code=500, detail=f"Ошибка предсказания: {str(e)}")
 
