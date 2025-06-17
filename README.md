@@ -345,11 +345,17 @@ Random Forest с наименьшим, 0 задач, слабая модель.
 - Мониторинг здоровья сервиса
 - Docker развертывание
 
+Также в пайплайне реализован сервис `dvc-init`, который автоматически подгружает модели. Для его корректной работы необходимо создать файл `.env` со следующими переменными:
+```
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+```
+
 ## Запуск всех версий API через Docker
 
 ```bash
 # Сборка и запуск всех сервисов
-docker-compose -f docker-compose.api.yml up --build
+docker compose -f docker-compose-api.yml up --build
 
 # API endpoints:
 # CatBoost:      http://localhost:8001

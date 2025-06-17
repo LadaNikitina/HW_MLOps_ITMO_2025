@@ -1,4 +1,18 @@
 services:
+  dvc-init:
+    build:
+      context: .
+      dockerfile: buildfiles/dvc-init.Dockerfile
+    container_name: dvc-init
+    volumes:
+      - ./models:/app/models
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - PYTHONUNBUFFERED=1
+    networks:
+      - dna-api-network
+
   api-catboost:
     build:
       context: .
@@ -22,6 +36,9 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    depends_on:
+      dvc-init:
+        condition: service_completed_successfully
     networks:
       - dna-api-network
 
@@ -48,6 +65,9 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    depends_on:
+      dvc-init:
+        condition: service_completed_successfully
     networks:
       - dna-api-network
 
@@ -74,6 +94,9 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    depends_on:
+      dvc-init:
+        condition: service_completed_successfully
     networks:
       - dna-api-network
 

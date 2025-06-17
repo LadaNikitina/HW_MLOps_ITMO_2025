@@ -11,8 +11,8 @@ __pycache__/
 .Python
 
 # Git (exclude large objects but keep git metadata for DVC)
-.git/objects/
-.git/logs/
+# .git/objects/
+# .git/logs/
 .gitignore
 
 # DVC
