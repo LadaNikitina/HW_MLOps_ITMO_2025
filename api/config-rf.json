@@ -1,0 +1,35 @@
+{
+  "default_model_version": "rf",
+  "model_paths": {
+    "rf": "models/rf"
+  },
+  "datasets": [
+    "enhancers",
+    "promoter_all", 
+    "splice_sites_all",
+    "H3K9me3",
+    "H4K20me1"
+  ],
+  "model_configs": {
+    "rf": {
+      "description": "Random Forest Classifier",
+      "hyperparameters": {
+        "max_depth": 6,
+        "n_estimators": 100
+      },
+      "file_extension": ".pkl"
+    }
+  },
+  "dataset_metrics": {
+    "enhancers": "MCC",
+    "promoter_all": "F1",
+    "splice_sites_all": "Accuracy", 
+    "H3K9me3": "MCC",
+    "H4K20me1": "MCC"
+  },
+  "api_settings": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "log_level": "INFO"
+  }
+} 

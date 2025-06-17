@@ -11,8 +11,8 @@ __pycache__/
 .Python
 
 # Git (exclude large objects but keep git metadata for DVC)
-.git/objects/
-.git/logs/
+# .git/objects/
+# .git/logs/
 .gitignore
 
 # DVC
@@ -37,7 +37,7 @@ Thumbs.db
 logs/
 
 # Large model files
-models/
+# models/  # Commented out for FastAPI testing
 catboost_info/
 
 # Research artifacts

@@ -248,6 +248,7 @@ docker compose -f docker-compose-airflow.yaml exec airflow-webserver python -m a
 
 ![image](https://github.com/user-attachments/assets/4716cf91-caa3-4194-9d67-976ba6b4cb0d)
 
+
 ### splice_sites_all
 
 ![image](https://github.com/user-attachments/assets/a9b24918-9b09-4a5f-b85a-ef193573d0c7)
@@ -333,3 +334,86 @@ Random Forest с наименьшим, 0 задач, слабая модель.
 | splice_sites_all | catboost       | Accuracy  | 0.3430   | eval_catboost   |
 | splice_sites_all | lightgbm       | Accuracy  | 0.5470   | eval_lgbm       |
 | splice_sites_all | random_forest  | Accuracy  | 0.5107   | eval_rf         |
+
+# Домашнее задание 5 - API Сервис
+
+## Описание
+
+Сервис реализован при помощи фреймворка FastAPI. Сервис поддерживает:
+
+- Конфигурирование параметров моделей
+- Мониторинг здоровья сервиса
+- Docker развертывание
+
+Также в пайплайне реализован сервис `dvc-init`, который автоматически подгружает модели. Для его корректной работы необходимо создать файл `.env` со следующими переменными:
+```
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+```
+
+## Запуск всех версий API через Docker
+
+```bash
+# Сборка и запуск всех сервисов
+docker compose -f docker-compose-api.yml up --build
+
+# API endpoints:
+# CatBoost:      http://localhost:8001
+# LightGBM:      http://localhost:8002  
+# Random Forest: http://localhost:8003
+```
+
+## API Endpoints
+
+- `GET /health` - Проверка состояния сервиса
+- `GET /models` - Список доступных моделей
+- `POST /predict` - Одиночное предсказание
+- `GET /models/{model_version}/datasets` - Датасеты для модели
+
+### Predictions
+`/predict` ожидает эмбеддинг в виде списка `features`. На стороне API происходит препроцессинг данных и они преобразуются в вид, с которым умеет работать модель
+
+Пример использования (на сгенерированных данных):
+```bash
+# Генерируем данные
+uv run python -c "import json; import random; random.seed(42); features = [random.normalvariate(0, 1) for _ in range(512)]; request_data = {'features': features, 'dataset': 'enhancers'}; print(json.dumps(request_data))" > /tmp/test_request_512.json
+
+# Отправляем запрос
+echo "Testing CatBoost model..." && curl -X POST "http://localhost:8001/predict?model_version=catboost" -H "accept: application/json" -H "Content-Type: application/json" -d @/tmp/test_request_512.json
+```
+
+## Конфигурация
+
+Для каждого сервиса был настроен свой конфигурационный файл:
+
+- `api/config-catboost.json` - CatBoost
+- `api/config-lgbm.json` - LightGBM
+- `api/config-rf.json` - Random Forest
+
+Это позволяет внутри одного сервиса разворачивать разные модели, что может быть полезно для тестирования 2 разных версий одной и той же модели (разворачиваем их внутри двух разных сервисов)
+
+## Бенчмаркинг API
+
+Для тестирования API был реализован скрипт `scripts/benchmark_models.py`, который генерирует `benchmark_detailed_results.json` c метриками по различным сервисам. Скрипт использует тестовую выборку для отправки запросов к модели (реализация обоих частей последнего пункта ДЗ).
+
+Были получены следующее результаты:
+
+**Метрики качества:**
+- LightGBM показал лучшие результаты по точности на большинстве датасетов (accuracy 0.73-0.86, F1 0.75-0.86)
+- CatBoost продемонстрировал высокие результаты на задачах эпигенетической разметки (MCC до 0.71)
+- Random Forest отстаёт по всем метрикам качества от других моделей
+
+**Метрики скорости:**
+- LightGBM - самая быстрая модель: среднее время отклика 0.003-0.004с, до 313 запросов/сек
+- Random Forest - средняя скорость: время отклика 0.005с, ~200 запросов/сек  
+- CatBoost - наиболее медленная: время отклика 0.009с, ~110 запросов/сек
+
+LightGBM обеспечивает оптимальное соотношение качества и скорости для production-развертывания.
+
+# Домашнее задание 6 - Мониторинг
+Был добавлен мониторинг через graphana и prometheus в приложение FastAPI
+
+Реализован middleware, который собирает метрики, а также отдельный эндпоинт `/metrics`. В Docker были добавлены соответствующие конфигурации
+
+Работа была протестирована путем создания простейших визуализаций, скриншот из graphana ниже
+![](assets/graphana.jpg)

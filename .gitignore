@@ -5,3 +5,5 @@ __pycache__
 
 /airflow/logs/
 /mlflow_metrics
+
+.env
